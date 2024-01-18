@@ -17,6 +17,12 @@ export class IVirtualGridListItem extends Component {
         this._imageCache = value;
     }
 
+    public loadImage(uri: string, callback: Function) {
+        if (this.imageCache) {
+            this.imageCache.loadImage(uri, callback);
+        }
+    }
+
     /**
      *
      */

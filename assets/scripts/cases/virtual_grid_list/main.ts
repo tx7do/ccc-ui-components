@@ -43,8 +43,8 @@ export class VirtualGridListScene extends Component {
 
         if (this.gridList) {
             this.gridList.initGridList(this.itemPrefab, 'list_item', {
-                paddingTop: 10,
-                paddingBottom: 100,
+                paddingTop: 0,
+                paddingBottom: 0,
                 spacingY: 5,
                 emptyTip: '什么也没有啊',
                 columnNum: 0,
@@ -73,7 +73,9 @@ export class VirtualGridListScene extends Component {
         this._dataList = this._dataList ? this._dataList.concat(list) : list;
 
         console.log('showList', this.gridList)
-        this.gridList.appendItemsToDisplayList(list);
+        if (this.gridList) {
+            this.gridList.appendItemsToDisplayList(list);
+        }
     }
 
     _nextPage() {
@@ -88,6 +90,10 @@ export class VirtualGridListScene extends Component {
     }
 
     onBtnScrollToTop_Tap() {
+        if (this.gridList == null) {
+            return;
+        }
+
         if (!this.gridList.isTop()) {
             this.gridList.scrollToTop();
         }
@@ -100,10 +106,18 @@ export class VirtualGridListScene extends Component {
     }
 
     onBtnRefresh_Tap() {
+        if (this.gridList == null) {
+            return;
+        }
+
         this.gridList.refreshItemDisplays();
     }
 
     onBtnClear_Tap() {
+        if (this.gridList == null) {
+            return;
+        }
+
         this.gridList.clearList();
     }
 
@@ -118,7 +132,11 @@ export class VirtualGridListScene extends Component {
             this.labelChangeColumn.string = `显示${column + 1}列`
         }
         this._currentColumn = column;
-        this.gridList.clearList();
+
+        if (this.gridList) {
+            this.gridList.clearList();
+        }
+
         this.initGridList();
     }
 
@@ -135,7 +153,9 @@ export class VirtualGridListScene extends Component {
         }
         itemData = null;
         list = null;
-        this.gridList.refreshItemDisplays(targetList);
+        if (this.gridList) {
+            this.gridList.refreshItemDisplays(targetList);
+        }
         targetList = null;
     }
 }

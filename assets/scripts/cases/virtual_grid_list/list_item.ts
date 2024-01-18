@@ -31,9 +31,9 @@ export class ListItem extends IVirtualGridListItem {
 
     onDataChanged() {
         const data = this.data;
-        this.imageCache.loadImage(data.pic, this._showImg.bind(this));
-        this.labelItemName.getComponent(Label).string = data.name;
-        this.labelDate.getComponent(Label).string = data.date;
+        this.loadImage(data.pic, this._showImg.bind(this));
+        this.labelItemName.string = data.name;
+        this.labelDate.string = data.date;
 
         this.updateSelectionStatus();
     }
