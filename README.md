@@ -11,6 +11,7 @@ Cocos Creator一些UI组件。
 | Toast             | UI 组件 | 一款类似于 Android Toast 的吐司组件                         |
 | DropDown          | UI 组件 | 下拉菜单组件                                            |
 | VirtualGridList   | UI 组件 | 虚拟列表组件                                            |
+| TextMeshPro       | UI 组件 | SDF文本渲染组件                                         |
 | SceneManager      | 工具组件  | 受 Android Activity 启动模式启发，将其启动模式复刻到了 CocosCreator |
 | AudioManager      | 工具组件  | 用来播放本地和远程音频文件                                     |
 | FullScreenAdapter | 工具组件  | 全屏适配器                                             |
@@ -25,3 +26,4 @@ Cocos Creator一些UI组件。
 - [CocosCreator-Dropdown](https://github.com/ETRick/CocosCreator-Dropdown/tree/master)
 - [CCVirtualGridList-for-Cocos-Creator](https://github.com/SituDana/CCVirtualGridList-for-Cocos-Creator)
 - [cocomat](https://github.com/cocos/cocomat)
+- [Cocos TextMeshPro](https://github.com/LeeYip/cocos-text-mesh-pro)
