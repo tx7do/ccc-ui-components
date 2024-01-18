@@ -11,9 +11,6 @@ interface DataItem {
 
 @ccclass('virtual_grid_list')
 export class VirtualGridListScene extends Component {
-    @property(Prefab)
-    itemPrefab: Prefab = null;
-
     @property(VirtualGridList)
     protected gridList: VirtualGridList = null;
 
@@ -39,17 +36,7 @@ export class VirtualGridListScene extends Component {
         this._pageNo = 1;
         this._dataList = [];
 
-        console.log('initGridList', this.gridList);
-
         if (this.gridList) {
-            this.gridList.initGridList(this.itemPrefab, 'list_item', {
-                paddingTop: 0,
-                paddingBottom: 0,
-                spacingY: 5,
-                emptyTip: '什么也没有啊',
-                columnNum: 0,
-                useVirtualLayout: true
-            });
             this.gridList.registerScrollToBottomEventHandler(this._nextPage, this);
             this.gridList.registerSelectOneItemEventHandler(this._onSelectOneItem, this);
         }
@@ -72,7 +59,6 @@ export class VirtualGridListScene extends Component {
         }
         this._dataList = this._dataList ? this._dataList.concat(list) : list;
 
-        console.log('showList', this.gridList)
         if (this.gridList) {
             this.gridList.appendItemsToDisplayList(list);
         }

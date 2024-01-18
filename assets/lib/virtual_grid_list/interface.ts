@@ -9,29 +9,30 @@ export class IVirtualGridListItem extends Component {
     protected _data: any = null;
     protected _imageCache: ImageCache = null;
 
-    get imageCache(): ImageCache {
-        return this._imageCache;
-    }
-
     set imageCache(value: ImageCache) {
         this._imageCache = value;
     }
 
+    /**
+     * 加载图片
+     * @param uri
+     * @param callback
+     */
     public loadImage(uri: string, callback: Function) {
-        if (this.imageCache) {
-            this.imageCache.loadImage(uri, callback);
+        if (this._imageCache) {
+            this._imageCache.loadImage(uri, callback);
         }
     }
 
     /**
-     *
+     * 自定义数据
      */
     public get data(): any {
         return this._data;
     }
 
     /**
-     * 获取itemID
+     * 获取索引
      * @returns {Number}
      */
     public get itemIndex(): number {
@@ -39,7 +40,7 @@ export class IVirtualGridListItem extends Component {
     }
 
     /**
-     *
+     * 选中状态
      * @param selected
      */
     public setSelectStatus(selected: boolean): void {

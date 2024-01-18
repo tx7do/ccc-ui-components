@@ -11,14 +11,12 @@ import {
     Node,
     Prefab,
     ScrollView,
-    SpriteFrame,
-    Texture2D,
     isValid,
     UITransform,
-    resources,
     Event
 } from 'cc';
 import {IVirtualGridListItem} from './interface';
+import {ImageCache} from "./image_cache";
 
 const {ccclass, property} = _decorator;
 
@@ -38,66 +36,90 @@ interface IVirtualGridOptions {
 
 @ccclass('VirtualGridList')
 export class VirtualGridList extends Component {
-    @property(Prefab)
-    itemPrefab: Prefab = null;
+    @property({
+        tooltip: '表项的预制体',
+        type: Prefab,
+    })
+    protected itemPrefab: Prefab = null;
 
-    @property(CCString)
-    itemComponentName: string = '';
+    @property({
+        tooltip: '没有数据时候的显示文本组件',
+        type: Label,
+    })
+    protected labelEmptyTip: Label = null;
 
-    @property(Label)
-    labelEmptyTip: Label = null;
+    @property({
+        tooltip: '表项距离上边缘距离',
+        type: CCInteger,
+    })
+    protected paddingTop: number = 0; // item 距离上边缘距离
+    @property({
+        tooltip: '表项距离下边缘距离',
+        type: CCInteger,
+    })
+    protected paddingBottom: number = 0; // item 距离下边缘距离
 
-    @property(CCInteger)
-    paddingTop: number = 0 // item 距离上边缘距离
-    @property(CCInteger)
-    paddingBottom: number = 0 // item 距离下边缘距离
+    @property({
+        tooltip: '表项的列间距',
+        type: CCInteger,
+    })
+    protected spacingX: number = 3; // item 列间距
+    @property({
+        tooltip: '表项的行间距',
+        type: CCInteger,
+    })
+    protected spacingY: number = 3; // item 行间距
 
-    @property(CCInteger)
-    spacingX: number = 3 // item 列间距
-    @property(CCInteger)
-    spacingY: number = 3 // item 行间距
+    @property({
+        tooltip: '列数',
+        type: CCInteger,
+    })
+    protected columnNum: number = 0; // 列数
 
-    @property(CCInteger)
-    columnNum: number = 0 // 列数
+    @property({
+        tooltip: '是否启用虚拟列表',
+        type: CCBoolean,
+    })
+    protected useVirtualLayout: boolean = true;    // 是否启用虚拟列表
 
-    @property(CCBoolean)
-    useVirtualLayout: boolean = true    // 是否启用虚拟列表
+    @property({
+        tooltip: '是否缓存所加载的图片',
+        type: CCBoolean,
+    })
+    protected cacheImage: boolean = true;  // 缓存加载的图片
 
-    @property(CCBoolean)
-    cacheImage: boolean = true  // 缓存加载的图片
+    @property({
+        tooltip: '没有数据时候的显示文本',
+        type: CCString,
+    })
+    protected emptyTip: string = '';
 
-    protected emptyTip: string = ''
-
-    @property([Node])
     _items: Array<Node> = [];
+
+    private _imageCache: ImageCache = new ImageCache();
 
     protected _dataList: any[] = [];
 
-    protected _imgMap: Map<string, Texture2D>;
+    protected _selectedItemData: any = null;
 
-    protected selectedItemData: any = null;
+    protected _scrollView: ScrollView = null; // ScrollView组件
+    protected _content: Node = null; // ScrollView.content
 
-    protected _gridList: ScrollView = null // ScrollView组件
-    protected _content: Node = null // ScrollView.content
+    protected _spawnCount: number = 0; // 常驻绘制数量
+    protected _totalCount: number = 0; // 总共数量
+    protected _bufferZone: number = 0; // 缓冲区域(包括屏幕内)
+    protected _lastContentPosY: number = 0; // 上一次滚动位置
 
-    protected _spawnCount: number = 0 // 常驻绘制数量
-    protected _totalCount: number = 0 // 总共数量
-    protected _bufferZone: number = 0 // 缓冲区域(包括屏幕内)
-    protected _lastContentPosY: number = 0 // 上一次滚动位置
+    protected _itemHeight: number = 0; // item template 高度
+    protected _itemWidth: number = 0; // item template 宽度
 
-    protected _itemHeight: number = 0 // item template 高度
-    protected _itemWidth: number = 0 // item template 宽度
+    protected _initialized: boolean = false; //初始化完成
 
-    protected _imgLoadingList: any[] //要加载的图片列表
-    protected _imgLoading: boolean = false //图片列表是否在加载中
-    protected _loadImgDuration: number = 1 // 帧内加载最大时长
-    protected _initialized: boolean = false //初始化完成
+    protected _scrollToBottomHandler: Function = null;  // 滑动到底部回调事件
+    protected _scrollToBottomThisObj: any = null;       // 滑动到底部回调事件this对象
 
-    protected _scrollToBottomHandler: any = null //滑动到底部回调事件
-    protected _scrollToBottomThisObj: any = null //滑动到底部回调事件this对象
-
-    protected _selectOneItemHandler: any = null    // 选中回调事件
-    protected _selectOneItemThisObj: any = null    // 选中事件this 对象
+    protected _selectOneItemHandler: Function = null;   // 选中回调事件
+    protected _selectOneItemThisObj: any = null;        // 选中事件this 对象
 
     /**
      * 获取显示列表
@@ -116,7 +138,7 @@ export class VirtualGridList extends Component {
     }
 
     public get getGridList(): ScrollView {
-        return this._gridList;
+        return this._scrollView;
     }
 
     start() {
@@ -124,6 +146,8 @@ export class VirtualGridList extends Component {
         // data.push({})
         // data.push({})
         // this.refreshItemDisplays(data)
+
+        this.initGridList();
     }
 
     protected onLoad() {
@@ -133,16 +157,13 @@ export class VirtualGridList extends Component {
     /**
      * 通过初始化方法传参的方式，初始化滚动列表，建议在画面的onLoad方法中调用，
      * 相比在creator界面中设置参数，这种方式更易维护，不会因为与VirtualGridList控件保持同步而导致配置丢失或者重置。
-     * @param {Prefab} itemPrefab
-     * @param {String} itemComponentName
      * @param {IVirtualGridOptions} options
      */
-    initGridList(itemPrefab: Prefab, itemComponentName: string, options: IVirtualGridOptions) {
-        this._gridList = this.node.getComponent(ScrollView);
-        this._content = this._gridList.content;
+    initGridList(options?: IVirtualGridOptions) {
+        this._scrollView = this.node.getComponent(ScrollView);
+        this._content = this._scrollView.content;
 
-        this.itemPrefab = itemPrefab;
-        this.itemComponentName = itemComponentName;
+        // this.itemPrefab = itemPrefab;
 
         if (options) {
             this.paddingTop = (options.paddingTop === undefined) ? this.paddingTop : options.paddingTop;
@@ -207,7 +228,7 @@ export class VirtualGridList extends Component {
             return;
         }
 
-        let content = this._content || this._gridList.content;
+        let content = this._content || this._scrollView.content;
         content.destroyAllChildren();
 
         // 总数量
@@ -246,7 +267,7 @@ export class VirtualGridList extends Component {
             // 不满一屏的时候，重新绘制新列表
             this.createItemsDisplayList(dataList);
         } else {
-            let content = this._content || this._gridList.content;
+            let content = this._content || this._scrollView.content;
             // 总数量
             this._totalCount = dataList.length;
             // 设置content总高度
@@ -258,9 +279,9 @@ export class VirtualGridList extends Component {
             this.labelEmptyTip.node.active = this._totalCount <= 0;
 
             this.scheduleOnce(() => {
-                let pos = this._gridList.getScrollOffset();
+                let pos = this._scrollView.getScrollOffset();
                 pos.y += this._itemHeight * .2;
-                this._gridList.scrollToOffset(pos, .1);
+                this._scrollView.scrollToOffset(pos, .1);
             });
         }
     }
@@ -293,11 +314,10 @@ export class VirtualGridList extends Component {
         if (this._items) {
             let list = this._items;
             let item: Node;
-            let comName = this.itemComponentName;
             if (some && some.length > 0) {
                 for (let i = 0; i < list.length; i++) {
                     item = list[i];
-                    const com = (item.getComponent(comName) as IVirtualGridListItem)
+                    const com = (item.getComponent(IVirtualGridListItem) as IVirtualGridListItem)
                     if (some.indexOf(com.data) != -1) {
                         com.onDataChanged();
                     }
@@ -305,7 +325,7 @@ export class VirtualGridList extends Component {
             } else {
                 for (let i = 0; i < list.length; i++) {
                     item = list[i];
-                    const com = (item.getComponent(comName) as IVirtualGridListItem)
+                    const com = (item.getComponent(IVirtualGridListItem) as IVirtualGridListItem)
                     com.onDataChanged();
                 }
             }
@@ -320,7 +340,6 @@ export class VirtualGridList extends Component {
         const isDown = this._content.position.y < this._lastContentPosY; // 滚动方向 下减上加
         const offset = (this._itemHeight + this.spacingY) * Math.ceil(items.length / this.columnNum); // 所有items 总高度
         let dataList = this._dataList;
-        let comName = this.itemComponentName;
 
         // 更新每一个item位置和数据
         for (let i = 0; i < items.length; i++) {
@@ -331,7 +350,7 @@ export class VirtualGridList extends Component {
                 // 往下滑动，看下面的item，超出屏幕外下方，但是没有到top的item
                 if (viewPos.y < -buffer
                     && item.position.y + offset < 0) {
-                    let itemCtrl = (item.getComponent(comName) as IVirtualGridListItem);
+                    let itemCtrl = (item.getComponent(IVirtualGridListItem) as IVirtualGridListItem);
                     itemCtrl.onLeave();
                     item.setPosition(item.position.x, item.position.y + offset)
                     let itemIndex = itemCtrl.itemIndex - items.length;
@@ -343,7 +362,7 @@ export class VirtualGridList extends Component {
                 // 往上滑动，看上面的item，超出屏幕外上方，但是没有到bottom的item
                 if (viewPos.y > buffer
                     && item.position.y - offset > -this._content.getComponent(UITransform).height) {
-                    let itemCtrl = (item.getComponent(comName) as IVirtualGridListItem);
+                    let itemCtrl = (item.getComponent(IVirtualGridListItem) as IVirtualGridListItem);
                     let itemIndex = itemCtrl.itemIndex + items.length;
                     // 大于总数量的不移动更新
                     if (itemIndex < this._totalCount) {
@@ -401,11 +420,10 @@ export class VirtualGridList extends Component {
         }
         dataList = null;
 
-        const comName = this.itemComponentName;
         if (items.length > 0) {
             this.scheduleOnce(() => {
                 for (let i = 0; i < items.length; i++) {
-                    (items[i].getComponent(comName) as IVirtualGridListItem).onDataChanged();
+                    (items[i].getComponent(IVirtualGridListItem) as IVirtualGridListItem).onDataChanged();
                 }
                 items = null;
             })
@@ -418,7 +436,7 @@ export class VirtualGridList extends Component {
      * @param {*} data
      * @returns {Node} 返回一个显示单元
      */
-    _createOneItemDisplay(idx: number, data: any): Node {
+    protected _createOneItemDisplay(idx: number, data: any): Node {
         let item = instantiate(this.itemPrefab);
         this._content.addChild(item);
 
@@ -426,8 +444,9 @@ export class VirtualGridList extends Component {
         this._updateItemPos(item, idx);
 
         // 更新id
-        const component = (item.getComponent(this.itemComponentName) as IVirtualGridListItem);
+        const component = (item.getComponent(IVirtualGridListItem) as IVirtualGridListItem);
         component.updateItem(data, idx);
+        component.imageCache = this._imageCache;
 
         item.on(Node.EventType.TOUCH_END, this._onItemTouched, this);
         return item;
@@ -439,7 +458,7 @@ export class VirtualGridList extends Component {
      */
     protected _onItemTouched(event: Event) {
         const target = event.target as Node;
-        const com = target.getComponent(this.itemComponentName) as IVirtualGridListItem;
+        const com = target.getComponent(IVirtualGridListItem) as IVirtualGridListItem;
         this._selectOne(com, true);
     }
 
@@ -454,19 +473,19 @@ export class VirtualGridList extends Component {
     }
 
     getBaseItem(item: Node): IVirtualGridListItem {
-        return (item.getComponent(this.itemComponentName) as IVirtualGridListItem)
+        return (item.getComponent(IVirtualGridListItem) as IVirtualGridListItem)
     }
 
-    _selectOne(com: IVirtualGridListItem, triggerOutsideCallback: any) {
-        if (this.selectedItemData && this.selectedItemData != com.data) {
-            let item = this.findItemDisplayByData(this.selectedItemData);
+    protected _selectOne(com: IVirtualGridListItem, triggerOutsideCallback: any) {
+        if (this._selectedItemData && this._selectedItemData != com.data) {
+            let item = this.findItemDisplayByData(this._selectedItemData);
             if (item) {
                 let component = this.getBaseItem(item);
                 component.setSelectStatus(false);
                 component.onUnselect();
             }
         }
-        this.selectedItemData = com.data;
+        this._selectedItemData = com.data;
         com.setSelectStatus(true);
         com.onSelect();
         true === triggerOutsideCallback && this._onSelectOneItem(com.data);
@@ -480,9 +499,8 @@ export class VirtualGridList extends Component {
     public findItemDisplayByData(data: any): Node {
         if (data && this._items) {
             let list = this._items;
-            let comName = this.itemComponentName;
             for (let item of list) {
-                let component = (item.getComponent(comName) as IVirtualGridListItem);
+                let component = (item.getComponent(IVirtualGridListItem) as IVirtualGridListItem);
                 if (component.data == data) {
                     return item;
                 }
@@ -522,7 +540,7 @@ export class VirtualGridList extends Component {
         // 更新位置
         this._updateItemPos(item, idx);
         // 更新id
-        (item.getComponent(this.itemComponentName) as IVirtualGridListItem).updateItem(data, idx);
+        (item.getComponent(IVirtualGridListItem) as IVirtualGridListItem).updateItem(data, idx);
     }
 
     /**
@@ -567,8 +585,8 @@ export class VirtualGridList extends Component {
         const row = Math.floor(itemIndex / columnNum);
         const y = -itemHeight * (0.5 + row) - this.spacingY * (row) - this.paddingTop;
         const pos = math.v2(0, y);
-        if (this._gridList) {
-            this._gridList.scrollToOffset(pos, sec || 0);
+        if (this._scrollView) {
+            this._scrollView.scrollToOffset(pos, sec || 0);
         }
 
         if (this.useVirtualLayout) {
@@ -584,13 +602,13 @@ export class VirtualGridList extends Component {
      * 停止自动滚动
      */
     public stopAutoScroll() {
-        if (this._gridList == null) {
+        if (this._scrollView == null) {
             return;
         }
 
-        if (!this._gridList.isAutoScrolling()) return;
+        if (!this._scrollView.isAutoScrolling()) return;
 
-        this._gridList.stopAutoScroll();
+        this._scrollView.stopAutoScroll();
     }
 
     /**
@@ -600,7 +618,7 @@ export class VirtualGridList extends Component {
      */
     public getPositionInView(item: Node): math.Vec2 | math.Vec3 {
         const worldPos = item.parent.getComponent(UITransform).convertToWorldSpaceAR(item.position);
-        return this._gridList.node.getComponent(UITransform).convertToNodeSpaceAR(worldPos);
+        return this._scrollView.node.getComponent(UITransform).convertToNodeSpaceAR(worldPos);
     }
 
     /**
@@ -608,95 +626,7 @@ export class VirtualGridList extends Component {
      * @returns {Number}
      */
     public getScrollOffsetY(): number {
-        return Math.floor(this._gridList.getScrollOffset().y);
-    }
-
-    /**
-     * 添加并等待加载图片
-     * @param {String} uri 加载图片地址
-     * @param {*} callback  加载完成回调方法
-     * @param {*} thisObj  回调方法的this对象
-     */
-    public loadImage(uri: string, callback: any, thisObj: any) {
-        let list = this._imgLoadingList;
-        let imgMap = this._imgMap;
-        if (!list) {
-            list = this._imgLoadingList = [];
-            imgMap = this._imgMap = new Map();
-        }
-        if (this.cacheImage) {
-            let frame = imgMap.get(uri);
-            if (frame && callback) {
-                callback.call(thisObj, frame, uri);
-                return;
-            }
-        }
-        list.push({
-            uri: uri,
-            cb: callback,
-            thisObj: thisObj
-        });
-        if (!this._imgLoading) {
-            this._imgLoading = true;
-            this._loopLoadImage(list, this._loadImgDuration, imgMap);
-        }
-    }
-
-    /**
-     * 获取缓存图片
-     * @param {String} key
-     * @returns {Texture2D} 纹理
-     */
-    public getImageFromCache(key: string): Texture2D {
-        return this._imgMap.get(key);
-    }
-
-    /**
-     * 循环排队加载图片列表
-     * @param {Array} list 要加载的图片列表 [{uri, cb, thisObj}]
-     * @param {Number} duration 帧内加载最大时长
-     * @param {*} imgMap 图片缓存map
-     */
-    private _loopLoadImage(list: Array<any>, duration: number, imgMap: any) {
-        // 执行之前，先记录开始时间
-        let startTime = new Date().getTime();
-        while (list.length > 0) {
-
-            let data = list.pop();
-            this._loadSingleImage(data.uri, data.cb, data.thisObj, imgMap);
-
-            // 每执行完一段小代码段，都检查一下是否已经超过我们分配的本帧，这些小代码端的最大可执行时间
-            if (new Date().getTime() - startTime > duration) {
-                // 如果超过了，那么本帧就不在执行，开定时器，让下一帧再执行
-                this.scheduleOnce(() => {
-                    this._loopLoadImage(list, duration, imgMap);
-                });
-                return;
-            }
-        }
-        this._imgLoading = false;
-    }
-
-    /**
-     * 加载单张图片
-     * @param {String} uri 加载图片地址
-     * @param {*} callback  加载完成回调方法
-     * @param {*} thisObj  回调方法的this对象
-     * @param {*} imgMap 图片缓存map
-     */
-    private _loadSingleImage(uri: string, callback: any, thisObj: any, imgMap: any) {
-        resources.load(uri, SpriteFrame, (err, frame) => {
-            if (err) {
-                error('error to loadRes: ' + uri + ', ' + err || err.message);
-                return;
-            }
-            this.cacheImage && imgMap.set(uri, frame);
-            if (callback) {
-                callback.call(thisObj, frame, uri);
-            }
-            // // 自动释放SpriteFrame和关联Texture资源
-            // loader.setAutoReleaseRecursively(frame, true);
-        });
+        return Math.floor(this._scrollView.getScrollOffset().y);
     }
 
     /**
@@ -711,12 +641,12 @@ export class VirtualGridList extends Component {
     /**
      * 清理回收所有显示单元
      */
-    private _disposeItems() {
-        isValid(this._content) && this._gridList.content.destroyAllChildren();
+    protected _disposeItems() {
+        isValid(this._content) && this._scrollView.content.destroyAllChildren();
         this._items = null;
     }
 
-    private _onScrolling() {
+    protected _onScrolling() {
 
     }
 
@@ -727,14 +657,16 @@ export class VirtualGridList extends Component {
         if (this.useVirtualLayout) {
             this.node.off('scrolling', this._onScrolling, this);
         }
+
         this._scrollToBottomHandler = null;
         this._scrollToBottomThisObj = null;
+
         this._selectOneItemHandler = null;
         this._selectOneItemThisObj = null;
+
         this._disposeItems();
         this._dataList = null;
-        this._imgMap && this._imgMap.clear();
-        this._imgMap = null;
-        // lc.NotificationManager.targetOff(this);
+
+        this._imageCache.clear();
     }
 }
