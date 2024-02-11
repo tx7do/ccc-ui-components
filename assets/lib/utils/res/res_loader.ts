@@ -149,6 +149,28 @@ export default class ResLoader {
     public loadRemote<T extends Asset>(url: string, options: IRemoteOptions | CompleteCallback<T> | null, onComplete?: CompleteCallback<T> | null): void {
         assetManager.loadRemote(url, options, onComplete);
     }
+
+    /**
+     * @description 同步调用
+     */
+    public async asyncLoad<T extends Asset>(bundleName: string, paths: string | string[], type: AssetType<T> | null): Promise<[T | null, Error | null]> {
+
+        try {
+            const result = await new Promise((resolve, reject) => {
+                resLoader.load(bundleName, paths, type, (err, data: any) => {
+                    if (err) {
+                        throw err;
+                    }
+                    resolve(data);
+                });
+                return result;
+            });
+
+            return [result, null];
+        } catch (err) {
+            return [null, err];
+        }
+    }
 }
 
 export let resLoader = new ResLoader();

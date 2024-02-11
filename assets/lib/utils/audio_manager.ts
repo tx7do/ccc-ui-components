@@ -1,6 +1,6 @@
 import {director, error, Node, AudioClip, AudioSource} from "cc";
-import {Singleton} from "db://assets/lib/utils/singleton";
-import GameUtils from "db://assets/lib/utils/utils";
+import {Singleton} from "./singleton";
+import {resLoader} from "./res/res_loader";
 
 interface IAudioCallbackOptions {
     onError?: Function;
@@ -16,12 +16,13 @@ type AudioCallbackMap = Map<number, IAudioCallbackOptions>
 interface IAudioPlayOptions extends IAudioCallbackOptions {
     loop?: boolean;
     volume?: number;
+    bundle?: string;
 }
 
 type AudioRes = string | AudioClip;
 
 export class GameAudioManager extends Singleton<GameAudioManager>() {
-    private readonly _audioSource: AudioSource;
+    private readonly _audioSource: AudioSource = null;
 
     protected constructor() {
         super();
@@ -29,7 +30,7 @@ export class GameAudioManager extends Singleton<GameAudioManager>() {
         let audioMgr = new Node();
         audioMgr.name = '__audioMgr__';
 
-        director.getScene().addChild(audioMgr);
+        // director.getScene().addChild(audioMgr);
 
         director.addPersistRootNode(audioMgr);
 
@@ -49,18 +50,34 @@ export class GameAudioManager extends Singleton<GameAudioManager>() {
 
     public setVolume(volume: number) {
         this._volume = volume;
+        this._audioSource.volume = volume;
     }
 
     public setLoop(loop: boolean) {
         this._loop = loop;
+        this._audioSource.loop = loop;
     }
 
-    async playMusic(sound: AudioRes) {
-        await GameAudioManager.instance.play(sound, {volume: 0.5});
+    /**
+     * 播放背景音乐
+     * @param sound 声音源
+     * @param volume 音量
+     * @param bundleName
+     */
+    async playMusic(sound: AudioRes, volume: number = 1, bundleName: string = 'resources') {
+        this.stop();
+
+        await this.play(sound, {volume: volume, bundle: bundleName});
     }
 
-    async playAudio(sound: AudioRes) {
-        await GameAudioManager.instance.playOneShot(sound, 1);
+    /**
+     * 播放音效
+     * @param sound 声音源
+     * @param volume 音量
+     * @param bundleName
+     */
+    async playAudio(sound: AudioRes, volume: number = 1, bundleName: string = 'resources') {
+        await this.playOneShot(sound, volume, bundleName);
     }
 
     /**
@@ -69,12 +86,13 @@ export class GameAudioManager extends Singleton<GameAudioManager>() {
      * @zh
      * 播放短音频,比如 打击音效，爆炸音效等
      * @param sound clip or url for the audio
-     * @param volume
+     * @param volume 音量
+     * @param bundleName
      */
-    async playOneShot(sound: AudioRes, volume?: number) {
+    async playOneShot(sound: AudioRes, volume?: number, bundleName: string = 'resources') {
         if (sound instanceof AudioClip) {
         } else {
-            let [clip, err] = await GameUtils.asyncWrap<AudioClip, string>(GameUtils.loadAsync(sound, AudioClip));
+            let [clip, err] = await resLoader.asyncLoad<AudioClip>(bundleName, sound, AudioClip);
             if (err) {
                 error('create audio clip failed, err:' + err);
                 return;
@@ -101,7 +119,7 @@ export class GameAudioManager extends Singleton<GameAudioManager>() {
         if (sound instanceof AudioClip) {
             this._audioSource.clip = sound;
         } else {
-            let [clip, err] = await GameUtils.asyncWrap<AudioClip, string>(GameUtils.loadAsync(sound, AudioClip));
+            let [clip, err] = await resLoader.asyncLoad<AudioClip>(options.bundle || 'resources', sound, AudioClip);
             if (err) {
                 error('create audio clip failed, err:' + err);
                 return;
