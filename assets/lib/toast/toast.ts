@@ -48,7 +48,7 @@ export default class Toast extends Component {
             options = {};
         }
 
-        if (!Toast.toastNode && !isValid(Toast.toastNode) && !Toast.isInstantiating) {
+        if (!isValid(Toast.toastNode) && !Toast.isInstantiating) {
             Toast.isInstantiating = true;
 
             const [prefab, err] = await GameUtils.asyncWrap<Prefab, string>(GameUtils.loadAsync('lib/toast/toast', Prefab));
