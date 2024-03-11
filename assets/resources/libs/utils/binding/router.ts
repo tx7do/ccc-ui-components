@@ -1,5 +1,5 @@
 import {log} from 'cc';
-import Platform from "db://assets/lib/utils/platform";
+import Platform from "db://assets/resources/libs/utils/platform";
 import Binding from './binding';
 
 const TAG = 'Router';

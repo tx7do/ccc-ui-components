@@ -1,6 +1,6 @@
 import {Component, tween, Vec3, _decorator} from "cc";
-import TmpUtils from "db://assets/lib/text_mesh_pro/utils/tmp_utils";
-import TextMeshPro from "db://assets/lib/text_mesh_pro/text_mesh_pro";
+import TmpUtils from "db://assets/resources/libs/text_mesh_pro/utils/tmp_utils";
+import TextMeshPro from "db://assets/resources/libs/text_mesh_pro/text_mesh_pro";
 
 const {ccclass, property} = _decorator;
 

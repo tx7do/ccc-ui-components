@@ -1,5 +1,5 @@
 import {Component, _decorator} from "cc";
-import {ImageCache} from "db://assets/lib/virtual_grid_list/image_cache";
+import {ImageCache} from "db://assets/resources/libs/virtual_grid_list/image_cache";
 
 const {ccclass} = _decorator;
 

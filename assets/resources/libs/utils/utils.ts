@@ -1,5 +1,5 @@
 import {sys, view, resources, Asset, log} from "cc";
-import {Singleton} from "db://assets/lib/utils/singleton";
+import {Singleton} from "db://assets/resources/libs/utils/singleton";
 
 export default class GameUtils extends Singleton<GameUtils>() {
     private static TAG = 'GameSceneManager';

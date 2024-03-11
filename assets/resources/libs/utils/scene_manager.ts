@@ -1,5 +1,5 @@
 import {log, director} from "cc";
-import {Singleton} from "db://assets/lib/utils/singleton";
+import {Singleton} from "db://assets/resources/libs/utils/singleton";
 
 type SceneData = { [key: string]: any };
 

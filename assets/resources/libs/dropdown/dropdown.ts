@@ -11,9 +11,9 @@ import {
     UITransform
 } from 'cc';
 
-import DropDownOptionData from "db://assets/lib/dropdown/dropdown_option_data";
-import DropDownItem from "db://assets/lib/dropdown/dropdown_item";
-import Maths from "db://assets/lib/utils/maths";
+import DropDownOptionData from "db://assets/resources/libs/dropdown/dropdown_option_data";
+import DropDownItem from "db://assets/resources/libs/dropdown/dropdown_item";
+import Maths from "db://assets/resources/libs/utils/maths";
 
 const {ccclass, property} = _decorator;
 

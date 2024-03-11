@@ -14,7 +14,7 @@ import {
     UITransform,
     Prefab
 } from 'cc';
-import GameUtils from '../utils/utils';
+import GameUtils from 'db://assets/resources/libs/utils/utils';
 
 const {ccclass, property} = _decorator;
 

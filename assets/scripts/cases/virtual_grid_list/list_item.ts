@@ -1,5 +1,5 @@
 import {_decorator, Label, Sprite, math, SpriteFrame} from 'cc';
-import {IVirtualGridListItem} from "db://assets/lib/virtual_grid_list/interface";
+import {IVirtualGridListItem} from "db://assets/resources/libs/virtual_grid_list/interface";
 
 const {ccclass, property} = _decorator;
 

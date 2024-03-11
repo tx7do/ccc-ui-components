@@ -1,10 +1,10 @@
 import {_decorator, Component} from 'cc';
-import Toast from "db://assets/lib/toast/toast";
+import Toast from "db://assets/resources/libs/toast/toast";
 
 const {ccclass, property} = _decorator;
 
 @ccclass('toast')
-export class toast extends Component {
+export class ToastCase extends Component {
     async start() {
         await Toast.show('Welcome!');
     }

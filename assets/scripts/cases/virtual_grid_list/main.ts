@@ -1,5 +1,5 @@
 import {_decorator, Component, Label, Prefab} from 'cc';
-import {VirtualGridList} from "db://assets/lib/virtual_grid_list/virtual_grid_list";
+import {VirtualGridList} from "db://assets/resources/libs/virtual_grid_list/virtual_grid_list";
 
 const {ccclass, property} = _decorator;
 

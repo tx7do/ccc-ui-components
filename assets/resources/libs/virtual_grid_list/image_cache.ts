@@ -1,5 +1,5 @@
 import {Component, SpriteFrame, error} from "cc";
-import GameUtils from "db://assets/lib/utils/utils";
+import GameUtils from "db://assets/resources/libs/utils/utils";
 
 type Texture2DMap = Map<string, SpriteFrame>;
 
