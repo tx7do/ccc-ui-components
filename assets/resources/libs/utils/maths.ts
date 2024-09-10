@@ -100,7 +100,7 @@ export default class Maths {
     }
 
     /**
-     * 获取值域中的随机数
+     * 获取值域中的随机数，浮点数。
      * @param min 最小值
      * @param max 最大值
      */
@@ -109,6 +109,15 @@ export default class Maths {
             return Math.random() * min;
         }
         return min + Math.random() * (max - min);
+    }
+
+    /**
+     * 获取值域中的随机数，整数。
+     * @param min 最小值
+     * @param max 最大值
+     */
+    static randomInt(min: number, max?: number): number {
+        return Math.floor(Maths.random(min, max));
     }
 
     /**
