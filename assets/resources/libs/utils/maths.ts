@@ -123,6 +123,40 @@ export default class Maths {
     }
 
     /**
+     * 获取值域中的随机数
+     * 值域：[min, max)
+     * @param min 最小值
+     * @param max 最大值
+     */
+    static randomIndex(min: number, max?: number): number {
+        if (max === undefined) {
+            return Math.floor(Math.random() * min);
+        }
+        return Math.floor(min + Math.random() * (max - min));
+    }
+
+    /**
+     * 返回指定范围内 n 个随机整数的数组
+     * @param min
+     * @param max
+     * @param n
+     */
+    static randomIntArrayInRange(min: number, max: number, n: number = 1): Array<number> {
+        return Array.from(
+            {length: n},
+            () => Math.floor(Math.random() * (max - min + 1)) + min
+        );
+    }
+
+    /**
+     * 生成随机十六进制颜色代码
+     */
+    static randomHexColorCode(): string {
+        const n = (Math.random() * 0xfffff * 1000000).toString(16);
+        return "#" + n.slice(0, 6);
+    }
+
+    /**
      * 随机获取数组中的元素
      * @param arr
      */
