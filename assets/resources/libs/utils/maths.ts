@@ -101,6 +101,7 @@ export default class Maths {
 
     /**
      * 获取值域中的随机数，浮点数。
+     * 值域为：[min, max]
      * @param min 最小值
      * @param max 最大值
      */
@@ -108,11 +109,12 @@ export default class Maths {
         if (max === undefined) {
             return Math.random() * min;
         }
-        return min + Math.random() * (max - min);
+        return Math.random() * (max - min + 1) + min;
     }
 
     /**
      * 获取值域中的随机数，整数。
+     * 值域为：[min, max]
      * @param min 最小值
      * @param max 最大值
      */
