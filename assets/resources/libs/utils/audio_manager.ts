@@ -1,6 +1,8 @@
 import {director, error, Node, AudioClip, AudioSource} from "cc";
+
 import {Singleton} from "./singleton";
 import {resLoader} from "./res/res_loader";
+
 
 interface IAudioCallbackOptions {
     onError?: Function;
@@ -16,13 +18,12 @@ type AudioCallbackMap = Map<number, IAudioCallbackOptions>
 interface IAudioPlayOptions extends IAudioCallbackOptions {
     loop?: boolean;
     volume?: number;
-    bundle?: string;
 }
 
 type AudioRes = string | AudioClip;
 
 export class GameAudioManager extends Singleton<GameAudioManager>() {
-    private readonly _audioSource: AudioSource = null;
+    private readonly _audioSource: AudioSource;
 
     protected constructor() {
         super();
@@ -38,11 +39,17 @@ export class GameAudioManager extends Singleton<GameAudioManager>() {
     }
 
     private _loop: boolean = true;
+    private _enableMusic: boolean = true;
+    private _enableEffect: boolean = true;
+
     private _volume: number = 1;
     private _bgmAudioID: number = -1;
 
     private _musicPlayCallback: AudioCallbackMap = new Map();
     private _effectPlayCallback: AudioCallbackMap = new Map();
+
+    private _enableMusicCallback: Function = null;
+    private _enableEffectCallback: Function = null;
 
     public get audioSource() {
         return this._audioSource;
@@ -50,34 +57,44 @@ export class GameAudioManager extends Singleton<GameAudioManager>() {
 
     public setVolume(volume: number) {
         this._volume = volume;
-        this._audioSource.volume = volume;
     }
 
     public setLoop(loop: boolean) {
         this._loop = loop;
-        this._audioSource.loop = loop;
     }
 
-    /**
-     * 播放背景音乐
-     * @param sound 声音源
-     * @param volume 音量
-     * @param bundleName
-     */
+    public enable(enableMusic: boolean, enableEffect: boolean) {
+        this.enableMusic = enableMusic;
+        this.enableEffect = enableEffect;
+    }
+
+    public set enableMusic(enable: boolean) {
+        this._enableMusic = enable;
+        this._enableMusicCallback && this._enableMusicCallback(enable);
+    }
+
+    public set enableEffect(enable: boolean) {
+        this._enableEffect = enable;
+        this._enableEffectCallback && this._enableEffectCallback(enable);
+    }
+
     async playMusic(sound: AudioRes, volume: number = 1, bundleName: string = 'resources') {
         this.stop();
-
-        await this.play(sound, {volume: volume, bundle: bundleName});
+        if (this._enableMusic) {
+            await this.play(sound, {volume: volume}, true, bundleName);
+        }
     }
 
-    /**
-     * 播放音效
-     * @param sound 声音源
-     * @param volume 音量
-     * @param bundleName
-     */
-    async playAudio(sound: AudioRes, volume: number = 1, bundleName: string = 'resources') {
-        await this.playOneShot(sound, volume, bundleName);
+    async playEffect(sound: AudioRes, volume: number = 1, bundleName: string = 'resources') {
+        if (this._enableEffect) {
+            await this.playOneShot(sound, volume, bundleName);
+        }
+    }
+
+    resumeMusic() {
+        if (this._enableMusic) {
+            this.resume();
+        }
     }
 
     /**
@@ -87,7 +104,7 @@ export class GameAudioManager extends Singleton<GameAudioManager>() {
      * 播放短音频,比如 打击音效，爆炸音效等
      * @param sound clip or url for the audio
      * @param volume 音量
-     * @param bundleName
+     * @param bundleName 资源包名
      */
     async playOneShot(sound: AudioRes, volume?: number, bundleName: string = 'resources') {
         if (sound instanceof AudioClip) {
@@ -114,12 +131,13 @@ export class GameAudioManager extends Singleton<GameAudioManager>() {
      * @param sound clip or url for the sound
      * @param options
      * @param stopOther
+     * @param bundleName
      */
-    async play(sound: AudioRes, options?: IAudioPlayOptions, stopOther = true) {
+    async play(sound: AudioRes, options?: IAudioPlayOptions, stopOther = true, bundleName: string = 'resources') {
         if (sound instanceof AudioClip) {
             this._audioSource.clip = sound;
         } else {
-            let [clip, err] = await resLoader.asyncLoad<AudioClip>(options.bundle || 'resources', sound, AudioClip);
+            let [clip, err] = await resLoader.asyncLoad<AudioClip>(bundleName, sound, AudioClip);
             if (err) {
                 error('create audio clip failed, err:' + err);
                 return;
