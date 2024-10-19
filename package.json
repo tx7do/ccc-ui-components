@@ -3,5 +3,16 @@
   "uuid": "226faae3-1f2b-4bb4-bbba-40574454af18",
   "creator": {
     "version": "3.8.4"
+  },
+  "devDependencies": {
+    "@douyin-microapp/typings": "^1.2.2",
+    "@types/lodash-es": "^4.17.12",
+    "@types/qs": "^6.9.15",
+    "minigame-api-typings": "^3.8.4"
+  },
+  "dependencies": {
+    "lodash-es": "^4.17.21",
+    "qs": "^6.12.3",
+    "query-string": "^9.1.0"
   }
 }
