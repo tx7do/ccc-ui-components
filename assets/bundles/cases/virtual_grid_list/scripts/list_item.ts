@@ -38,19 +38,19 @@ export class ListItem extends IVirtualGridListItem {
     /**
      * 点击触发选择事件
      */
-    protected onSelect() {
+    public onSelect() {
         console.log('select _' + this.itemIndex);
 
         this.updateSelectionStatus();
     }
 
-    protected onUnselect() {
+    public onUnselect() {
         console.log('unselect _' + this.itemIndex);
 
         this.updateSelectionStatus();
     }
 
-    protected async onDataChanged() {
+    public async onDataChanged() {
         const data = this.data;
         await this.loadImage(data.pic, this._showImg.bind(this), 'virtual_grid_list');
         this.labelItemName.string = data.name;
@@ -59,9 +59,9 @@ export class ListItem extends IVirtualGridListItem {
         this.updateSelectionStatus();
     }
 
-    protected onEnter(): void {
+    public onEnter(): void {
     }
 
-    protected onLeave(): void {
+    public onLeave(): void {
     }
 }

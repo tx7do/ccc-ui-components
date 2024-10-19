@@ -62,27 +62,27 @@ export abstract class IVirtualGridListItem extends Component {
     /**
      * 更新item 显示，item交替时候触发
      */
-    protected abstract onDataChanged(): void;
+    public abstract onDataChanged(): void;
 
     /**
      * 当被点击触发事件
      */
-    protected abstract onSelect(): void ;
+    public abstract onSelect(): void ;
 
     /**
      * 当其他单元被点击触发事件
      */
-    protected abstract onUnselect(): void ;
+    public abstract onUnselect(): void ;
 
     /**
      * 当控件滑动进入可视区的时候触发
      */
-    protected abstract onEnter(): void ;
+    public abstract onEnter(): void ;
 
     /**
      * 当控件滑动离开可视区的时候触发
      */
-    protected abstract onLeave(): void;
+    public abstract onLeave(): void;
 
     protected onDestroy() {
         this._data = null;

@@ -1,6 +1,6 @@
 import {log, native} from "cc";
 
-import {PlatformUtils} from "db://assets/libs/utils/platform_utils";
+import {PlatformUtils} from "../platform_utils";
 
 interface Options {
     /**
