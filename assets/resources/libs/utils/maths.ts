@@ -83,19 +83,21 @@ export default class Maths {
      * 以某点为圆心，生成圆周上等分点的坐标
      *
      * @param {number} r 半径
-     * @param {math.Vec2} pos 圆心坐标
+     * @param {math.Vec2 | math.Vec3} pos 圆心坐标
      * @param {number} count 等分点数量
-     * @param {number} [randomScope=80] 等分点的随机波动范围
-     * @returns {math.Vec2[]} 返回等分点坐标
+     * @param {number} [randomScope=60] 等分点的随机波动范围
+     * @returns {Array<math.Vec3>} 返回等分点坐标
      */
-    static getCirclePoints(r: number, pos: math.Vec2, count: number, randomScope: number = 60): math.Vec2[] {
-        let points: math.Vec2[] = [];
+    static getCirclePoints(r: number, pos: math.Vec2 | math.Vec3, count: number, randomScope: number = 60): Array<math.Vec3> {
         const radians: number = Maths.thePI180 * Math.round(360 / count);
+
+        let points: Array<math.Vec3> = new Array(count);
         for (let i: number = 0; i < count; i++) {
             const x: number = pos.x + r * Math.sin(radians * i);
             const y: number = pos.y + r * Math.cos(radians * i);
-            points.unshift(math.v2(x + Math.random() * randomScope, y + Math.random() * randomScope));
+            points[i] = math.v3(x + Math.random() * randomScope, y + Math.random() * randomScope, 0);
         }
+
         return points;
     }
 
@@ -164,6 +166,7 @@ export default class Maths {
         return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined;
     }
 
+
     /**
      * Clamps (or clips or confines) the value to be between min and max.
      */
@@ -201,7 +204,7 @@ export default class Maths {
      * @param radian 弧度
      * @param distance 距离
      */
-    static getDistancePosition(startPos: math.Vec2, radian: number, distance: number): math.Vec2 {
+    static getDistancePosition(startPos: math.Vec2 | math.Vec3, radian: number, distance: number): math.Vec2 {
         const moveX = distance * Math.cos(radian);
         const moveY = distance * Math.sin(radian);
         return math.v2(startPos.x + moveX, startPos.y + moveY);
@@ -212,9 +215,9 @@ export default class Maths {
      * @param startPos 起始点
      * @param radian 弧度
      */
-    static testRaycast(startPos: math.Vec2, radian: number): readonly Readonly<RaycastResult2D>[] {
-        const p2 = Maths.getDistancePosition(startPos, radian, 4000);
-        // console.log(startPos, p2);
+    static testRaycast(startPos: math.Vec2 | math.Vec3, radian: number): readonly Readonly<RaycastResult2D>[] {
+        const p2 = Maths.getDistancePosition(startPos, radian, Maths.maxDistance);
+        // log(startPos, p2);
         return PhysicsSystem2D.instance.raycast(startPos, p2, ERaycast2DType.Closest);
     }
 }
