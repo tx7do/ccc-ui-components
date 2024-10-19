@@ -1,7 +1,7 @@
 import {log} from 'cc';
 
-import Platform from "../platform";
 import Binding from './binding';
+import {PlatformUtils} from "../platform_utils";
 
 const TAG = 'Router';
 
@@ -54,7 +54,7 @@ export default class Router {
             const data = args['data'];
             const exeResult = method.call(this, data);
             // 如果是在native环境下，则需要把结果返回到native中。
-            if (Platform.isNative() && typeof exeResult === 'object') {
+            if (PlatformUtils.isNative() && typeof exeResult === 'object') {
                 if (exeResult instanceof Promise) {
                     exeResult.then((result) => {
                         log('start call native from ts');

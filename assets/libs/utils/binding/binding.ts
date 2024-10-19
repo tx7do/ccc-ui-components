@@ -1,5 +1,6 @@
 import {log, native} from "cc";
-import Platform from "../platform";
+
+import {PlatformUtils} from "db://assets/libs/utils/platform_utils";
 
 interface Options {
     /**
@@ -103,7 +104,7 @@ export default class Binding {
                 };
             }
 
-            if (Platform.isNative() && Platform.isAndroid()) {
+            if (PlatformUtils.isNative() && PlatformUtils.isAndroid()) {
                 const resultCode = native.reflection.callStaticMethod('utils/binding/Binding', 'execute', '(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I',
                     methodName, typeof args === 'object' ? JSON.stringify(args) : '', cbName);
                 if (resultCode !== 0) {
@@ -125,7 +126,7 @@ export default class Binding {
                         this.clearCallback(cbName, timeoutId, cbProgressName);
                     }
                 }
-            } else if (Platform.isNative() && Platform.isIOS()) {
+            } else if (PlatformUtils.isNative() && PlatformUtils.isIOS()) {
                 const retId = native.reflection.callStaticMethod('Binding', 'executeWithMethodName:args:callback:',
                     methodName, typeof args === 'object' ? JSON.stringify(args) : '', cbName);
             } else {

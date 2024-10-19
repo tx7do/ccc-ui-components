@@ -1,5 +1,4 @@
 import {_decorator, Graphics, Color, UITransform, Component} from "cc";
-
 import {QRCode} from './_qrcode';
 
 const {ccclass, property, menu} = _decorator;

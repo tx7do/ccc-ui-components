@@ -17,7 +17,6 @@ import {
 
 import {resLoader} from "db://assets/libs/utils/res/res_loader";
 
-
 const {ccclass, property} = _decorator;
 
 export interface ShowOption {
@@ -53,12 +52,7 @@ export default class Toast extends Component {
         if (!isValid(Toast.toastNode) && !Toast.isInstantiating) {
             Toast.isInstantiating = true;
 
-            let [prefab, err] = await resLoader.asyncLoad<Prefab>('libs', 'components/toast/prefabs/toast', Prefab);
-            if (err) {
-                error('load loading logo sprite frame failed, err:' + err);
-                return false;
-            }
-
+            let [prefab, err] = await resLoader.asyncLoad<Prefab>('resources', '/toast/toast', Prefab);
             if (err) {
                 error('load toast prefab failed, err:' + err);
                 return false;
